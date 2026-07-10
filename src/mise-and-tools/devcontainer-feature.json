@@ -1,8 +1,8 @@
 {
   "id": "mise-and-tools",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": "mise + personal CLI baseline",
-  "description": "Installs mise (polyglot tool version manager) plus git, gh, Claude Code, and optionally zsh/starship.",
+  "description": "Installs mise (polyglot tool version manager) plus git, gh, Claude Code, and optionally zsh/starship. Persists Claude's login/history/memory across rebuilds via a named volume (assumes the 'vscode' remote user).",
   "options": {
     "installZsh": {
       "type": "boolean",
@@ -20,5 +20,16 @@
       "proposals": ["stable", "latest"],
       "description": "Claude Code version to install (stable, latest, or a pinned x.y.z)"
     }
-  }
+  },
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+  "mounts": [
+    {
+      "source": "claude-${devcontainerId}",
+      "target": "/home/vscode/.claude",
+      "type": "volume"
+    }
+  ],
+  "postCreateCommand": "if [ -d /home/vscode/.claude ]; then chown -R $(id -un) /home/vscode/.claude 2>/dev/null || sudo chown -R $(id -un) /home/vscode/.claude; fi"
 }

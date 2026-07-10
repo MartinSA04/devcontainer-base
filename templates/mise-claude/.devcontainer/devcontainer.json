@@ -8,18 +8,23 @@
       "claudeCodeVersion": "${templateOption:claudeCodeVersion}"
     }
   },
-  // CLAUDE_CONFIG_DIR pulls ~/.claude.json (the login session) into ~/.claude,
-  // so a single named volume captures login + credentials + history + memory.
-  "containerEnv": {
-    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
-  },
-  // Named volume keyed by ${devcontainerId} => stable across rebuilds, isolated
-  // per project. This is what makes Claude's state survive a rebuild.
+  // Claude persistence (login/history/memory volume + CLAUDE_CONFIG_DIR) is
+  // provided automatically by the mise-and-tools feature — nothing to add here.
+
+  // Keep dependency dirs in named volumes so the container's arch-specific
+  // installs never collide with tooling you run on the host, and so installs
+  // are faster and survive rebuilds. Drop whichever line your stack doesn't use.
   "mounts": [
-    "source=claude-${devcontainerId},target=/home/vscode/.claude,type=volume"
+    "source=node-modules-${devcontainerId},target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=venv-${devcontainerId},target=${containerWorkspaceFolder}/.venv,type=volume"
   ],
-  // A freshly created named volume is owned by root; hand it to the remote user
-  // so Claude Code can write to it.
-  "postCreateCommand": "sudo chown -R $(whoami) ~/.claude",
+
+  // A freshly created volume is root-owned — hand the dep dirs to the remote
+  // user, then provision the mise toolchain. `mise` itself is on PATH here, but
+  // the tools it manages are NOT auto-activated in this non-interactive shell,
+  // so your own install step must go through `mise exec --` (e.g.
+  // `&& mise exec -- pnpm install`).
+  "postCreateCommand": "sudo chown -R $(whoami) node_modules .venv 2>/dev/null; mise trust && mise install",
+
   "remoteUser": "vscode"
 }

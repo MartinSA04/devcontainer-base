@@ -44,22 +44,50 @@ mise is installed system-wide (`/usr/local/bin/mise`) and activated in interacti
 
 Claude Code is installed **per user** via the official installer, into the remote user's `~/.local/bin` and `~/.claude`.
 
-## How Claude persistence works
+## Claude persistence is automatic (feature-owned)
 
-A container rebuild recreates the container filesystem, which would normally wipe your Claude login, chat history, and project memory. The `mise-claude` template prevents this with two pieces:
+A rebuild recreates the container filesystem, which would normally wipe your Claude login, history, and memory. The **feature handles this for you** — just adding `mise-and-tools` persists Claude, with no `mounts`/`containerEnv` to copy into your project. The feature contributes three things to the container:
 
-1. **`CLAUDE_CONFIG_DIR=/home/vscode/.claude`** — this pulls `~/.claude.json` (which holds the **login session**) *into* the `~/.claude` directory, alongside credentials, history, and memory. Everything Claude needs to persist now lives under one directory.
-2. **A named Docker volume mounted at `~/.claude`:**
-   ```jsonc
-   "mounts": [
-     "source=claude-${devcontainerId},target=/home/vscode/.claude,type=volume"
-   ]
-   ```
-   The volume is keyed by `${devcontainerId}`, so it is stable across rebuilds but isolated per project. A `postCreateCommand` chowns the freshly created (root-owned) volume to the remote user so Claude can write to it.
+1. **`CLAUDE_CONFIG_DIR=/home/vscode/.claude`** — pulls `~/.claude.json` (the **login session**) into `~/.claude`, so one directory holds login + credentials + history + memory.
+2. **A named volume** `claude-${devcontainerId}` mounted at `/home/vscode/.claude` — stable across rebuilds, isolated per project.
+3. **A `postCreateCommand`** that chowns that volume to the remote user so Claude can write to it.
 
-The result: rebuild your container as often as you like — you stay logged in and keep your history and memory.
+Rebuild as often as you like — you stay logged in and keep your history and memory.
 
-> If you add the feature to a project *without* the template, replicate those three lines (`containerEnv`, `mounts`, `postCreateCommand`) in your own `devcontainer.json` to get the same persistence. See [`templates/mise-claude/.devcontainer/devcontainer.json`](templates/mise-claude/.devcontainer/devcontainer.json) for the reference.
+> **Caveats of feature-owned persistence.** Feature mounts can't reference `$HOME`, so the paths are hardcoded to the **`vscode` user** (`/home/vscode/.claude`) — the standard user on the `mcr.microsoft.com/devcontainers/base:*` images. On a root-based image it still works but stores state under `/home/vscode`. And every project using the feature gets its own `claude-*` volume automatically — the intended behavior for this personal baseline.
+
+## Keeping `node_modules` / `.venv` out of the bind mount
+
+Your project folder is bind-mounted from the host. If you run the same tooling **both** on the host and in the container, an install inside the container writes arch-/libc-specific binaries onto the host's `node_modules` / `.venv` (and vice versa), corrupting each other. Mount a named volume **over** those subpaths so the container gets its own copy the host never sees — this is baked into the `mise-claude` template:
+
+```jsonc
+"mounts": [
+  "source=node-modules-${devcontainerId},target=${containerWorkspaceFolder}/node_modules,type=volume",
+  "source=venv-${devcontainerId},target=${containerWorkspaceFolder}/.venv,type=volume"
+]
+```
+
+No more host/container conflicts, and installs are notably faster ([why](https://code.visualstudio.com/remote/advancedcontainers/improve-performance)). Gotchas:
+
+- **Ownership:** a fresh volume is root-owned; the template's `postCreateCommand` chowns `node_modules .venv` to the remote user before installing, or `pnpm`/`uv` fail with permission errors ([ref](https://github.com/microsoft/vscode-remote-release/issues/6669)).
+- **Drop what you don't use:** an unused `.venv` volume just appears as an empty dir — remove that mount line for a node-only (or python-only) project.
+- **uv cache (optional):** to also cache uv downloads across rebuilds, give `~/.cache/uv` its own volume, or point `UV_CACHE_DIR` at a persisted path.
+
+## The mise bootstrap + a `mise exec` gotcha
+
+The template's `postCreateCommand` provisions the toolchain automatically:
+
+```
+sudo chown -R $(whoami) node_modules .venv 2>/dev/null; mise trust && mise install
+```
+
+`mise` itself is on `PATH` in that non-interactive shell (installed to `/usr/local/bin`), but the **tools it manages are not auto-activated** there — `mise activate` only runs in interactive shells. So a project's own install step must go through `mise exec` (aka `mise x`):
+
+```
+... && mise exec -- pnpm install
+```
+
+Append your install command to the template's `postCreateCommand` that way — exactly how a downstream project (e.g. an Astro app running `pnpm install`) extends it.
 
 ## Repo structure
 
@@ -85,4 +113,4 @@ Run the feature test suite locally (requires Docker + the dev container CLI):
 devcontainer features test --skip-scenarios -f mise-and-tools -i mcr.microsoft.com/devcontainers/base:ubuntu .
 ```
 
-Both the Feature and the Template are published from `./src` by the [release workflow](.github/workflows/release.yaml) to `ghcr.io/martinsa04/devcontainer-base/*`. GHCR packages default to private — mark them public to use them without auth.
+The [release workflow](.github/workflows/release.yaml) publishes the Feature (from `./src`) and the Template (from `./templates`) to `ghcr.io/martinsa04/devcontainer-base/*`. GHCR packages default to private — mark them public to use them without auth.
