@@ -27,7 +27,7 @@ jobs:
         uses: devcontainers/action@v1
         with:
           publish-templates: "true"
-          base-path-to-templates: "./src"
+          base-path-to-templates: "./templates"
           generate-docs: "true"
 
         env:

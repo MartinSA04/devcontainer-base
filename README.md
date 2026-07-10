@@ -3,7 +3,7 @@
 A personal dev container baseline, published to GitHub Container Registry:
 
 - A **Feature** — [`mise-and-tools`](src/mise-and-tools) — installs [mise](https://mise.jdx.dev/) (polyglot tool version manager), `git`, `gh`, [Claude Code](https://code.claude.com/docs), and optionally `zsh` + [starship](https://starship.rs/).
-- A **Template** — [`mise-claude`](src/mise-claude) — scaffolds a ready-to-go project that uses the feature **and** persists Claude Code's login session, history, and memory across container rebuilds.
+- A **Template** — [`mise-claude`](templates/mise-claude) — scaffolds a ready-to-go project that uses the feature **and** persists Claude Code's login session, history, and memory across container rebuilds.
 
 ## Quickest start: apply the Template to a new project
 
@@ -59,16 +59,17 @@ A container rebuild recreates the container filesystem, which would normally wip
 
 The result: rebuild your container as often as you like — you stay logged in and keep your history and memory.
 
-> If you add the feature to a project *without* the template, replicate those three lines (`containerEnv`, `mounts`, `postCreateCommand`) in your own `devcontainer.json` to get the same persistence. See [`src/mise-claude/.devcontainer/devcontainer.json`](src/mise-claude/.devcontainer/devcontainer.json) for the reference.
+> If you add the feature to a project *without* the template, replicate those three lines (`containerEnv`, `mounts`, `postCreateCommand`) in your own `devcontainer.json` to get the same persistence. See [`templates/mise-claude/.devcontainer/devcontainer.json`](templates/mise-claude/.devcontainer/devcontainer.json) for the reference.
 
 ## Repo structure
 
 ```
-├── src
-│   ├── mise-and-tools/          # the Feature
-│   │   ├── devcontainer-feature.json
-│   │   └── install.sh
-│   └── mise-claude/             # the Template
+├── src                          # Features (base-path-to-features)
+│   └── mise-and-tools/
+│       ├── devcontainer-feature.json
+│       └── install.sh
+├── templates                    # Templates (base-path-to-templates)
+│   └── mise-claude/
 │       ├── devcontainer-template.json
 │       └── .devcontainer/devcontainer.json
 ├── test
