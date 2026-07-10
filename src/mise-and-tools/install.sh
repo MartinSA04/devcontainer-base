@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+
+echo "Installing base dependencies..."
+apt-get update -y
+apt-get install -y --no-install-recommends ca-certificates curl gnupg
 
 echo "Installing mise..."
-curl https://mise.jdx.dev/install.sh | sh
+curl -fsSL https://mise.jdx.dev/install.sh | sh
 echo 'eval "$(~/.local/bin/mise activate bash)"' >> /etc/bash.bashrc
 
 if [ "${INSTALLZSH}" = "true" ]; then
-  apt-get update -y
-  apt-get install -y zsh
-  curl -sS https://starship.rs/install.sh | sh -s -- -y
+  apt-get install -y --no-install-recommends zsh
+  curl -fsSL https://starship.rs/install.sh | sh -s -- -y
   echo 'eval "$(~/.local/bin/mise activate zsh)"' >> /etc/zsh/zshrc
   echo 'eval "$(starship init zsh)"' >> /etc/zsh/zshrc
 fi
