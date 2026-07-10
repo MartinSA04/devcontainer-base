@@ -1,0 +1,29 @@
+{
+  "id": "mise-claude",
+  "version": "1.0.0",
+  "name": "mise + persistent Claude Code",
+  "description": "A dev container preloaded with mise, git, gh, and Claude Code, where Claude's login session, history, and memory persist across container rebuilds via a named volume.",
+  "documentationURL": "https://github.com/MartinSA04/devcontainer-base/tree/main/src/mise-claude",
+  "publisher": "MartinSA04",
+  "options": {
+    "imageVariant": {
+      "type": "string",
+      "description": "Base image variant (Microsoft dev container base images; all use the 'vscode' user)",
+      "proposals": ["ubuntu", "debian", "bookworm", "jammy", "noble"],
+      "default": "ubuntu"
+    },
+    "installZsh": {
+      "type": "boolean",
+      "description": "Install zsh and the starship prompt",
+      "default": true
+    },
+    "claudeCodeVersion": {
+      "type": "string",
+      "description": "Claude Code version to install (stable, latest, or a pinned x.y.z)",
+      "proposals": ["stable", "latest"],
+      "default": "stable"
+    }
+  },
+  "platforms": ["Any"],
+  "keywords": ["mise", "claude", "claude-code", "gh", "persistent"]
+}

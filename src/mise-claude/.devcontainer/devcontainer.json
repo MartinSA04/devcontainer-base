@@ -1,0 +1,25 @@
+{
+  "name": "mise + persistent Claude Code",
+  "image": "mcr.microsoft.com/devcontainers/base:${templateOption:imageVariant}",
+  "features": {
+    "ghcr.io/martinsa04/devcontainer-base/mise-and-tools:1": {
+      "installZsh": "${templateOption:installZsh}",
+      "installClaudeCode": true,
+      "claudeCodeVersion": "${templateOption:claudeCodeVersion}"
+    }
+  },
+  // CLAUDE_CONFIG_DIR pulls ~/.claude.json (the login session) into ~/.claude,
+  // so a single named volume captures login + credentials + history + memory.
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+  // Named volume keyed by ${devcontainerId} => stable across rebuilds, isolated
+  // per project. This is what makes Claude's state survive a rebuild.
+  "mounts": [
+    "source=claude-${devcontainerId},target=/home/vscode/.claude,type=volume"
+  ],
+  // A freshly created named volume is owned by root; hand it to the remote user
+  // so Claude Code can write to it.
+  "postCreateCommand": "sudo chown -R $(whoami) ~/.claude",
+  "remoteUser": "vscode"
+}

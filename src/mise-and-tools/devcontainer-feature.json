@@ -1,13 +1,24 @@
 {
   "id": "mise-and-tools",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "mise + personal CLI baseline",
-  "description": "Installs mise (polyglot tool version manager) plus git, gh, and optionally zsh/starship.",
+  "description": "Installs mise (polyglot tool version manager) plus git, gh, Claude Code, and optionally zsh/starship.",
   "options": {
     "installZsh": {
       "type": "boolean",
       "default": true,
       "description": "Install zsh and the starship prompt"
+    },
+    "installClaudeCode": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install the Claude Code CLI for the remote user"
+    },
+    "claudeCodeVersion": {
+      "type": "string",
+      "default": "stable",
+      "proposals": ["stable", "latest"],
+      "description": "Claude Code version to install (stable, latest, or a pinned x.y.z)"
     }
   }
 }
