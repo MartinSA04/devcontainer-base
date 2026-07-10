@@ -1,0 +1,13 @@
+{
+  "id": "mise-and-tools",
+  "version": "1.0.0",
+  "name": "mise + personal CLI baseline",
+  "description": "Installs mise (polyglot tool version manager) plus git, gh, and optionally zsh/starship.",
+  "options": {
+    "installZsh": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install zsh and the starship prompt"
+    }
+  }
+}
