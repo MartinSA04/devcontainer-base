@@ -14,17 +14,22 @@
   // Keep dependency dirs in named volumes so the container's arch-specific
   // installs never collide with tooling you run on the host, and so installs
   // are faster and survive rebuilds. Drop whichever line your stack doesn't use.
+  //
+  // The third mount gives the container your GitHub SSH key (read-only). Only
+  // ~/.ssh/id_git is exposed — never your other keys — and post-create.sh writes
+  // an ~/.ssh/config that pins github.com to it. Requires ~/.ssh/id_git on the
+  // host; drop this line (and the ssh block in post-create.sh) if unused.
   "mounts": [
     "source=node-modules-${devcontainerId},target=${containerWorkspaceFolder}/node_modules,type=volume",
-    "source=venv-${devcontainerId},target=${containerWorkspaceFolder}/.venv,type=volume"
+    "source=venv-${devcontainerId},target=${containerWorkspaceFolder}/.venv,type=volume",
+    "source=${localEnv:HOME}/.ssh/id_git,target=/home/vscode/.ssh/id_git,type=bind,readonly"
   ],
 
-  // A freshly created volume is root-owned — hand the dep dirs to the remote
-  // user, then provision the mise toolchain. `mise` itself is on PATH here, but
-  // the tools it manages are NOT auto-activated in this non-interactive shell,
-  // so your own install step must go through `mise exec --` (e.g.
-  // `&& mise exec -- pnpm install`).
-  "postCreateCommand": "sudo chown -R $(whoami) node_modules .venv 2>/dev/null; mise trust && mise install",
+  // Provisioning lives in .devcontainer/post-create.sh (dep-dir ownership, mise
+  // install, GitHub SSH config). Note: mise's managed tools are NOT auto-
+  // activated in this non-interactive shell, so your own install step must go
+  // through `mise exec --` (e.g. `mise exec -- pnpm install`).
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
 
   "remoteUser": "vscode"
 }

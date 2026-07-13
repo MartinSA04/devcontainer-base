@@ -1,6 +1,6 @@
 {
   "id": "mise-claude",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "name": "mise + persistent Claude Code",
   "description": "A dev container preloaded with mise, git, gh, and Claude Code, where Claude's login session, history, and memory persist across container rebuilds via a named volume.",
   "documentationURL": "https://github.com/MartinSA04/devcontainer-base/tree/main/templates/mise-claude",
