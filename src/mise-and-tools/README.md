@@ -1,7 +1,7 @@
 
 # mise + personal CLI baseline (mise-and-tools)
 
-Installs mise (polyglot tool version manager) plus git, gh, Claude Code, and optionally zsh/starship.
+Installs mise (polyglot tool version manager) plus git, gh, Claude Code, and optionally zsh/starship. Persists Claude's login/history/memory across rebuilds via a named volume (assumes the 'vscode' remote user).
 
 ## Example Usage
 
