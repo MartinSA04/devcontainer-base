@@ -27,6 +27,21 @@ different filename or don't need GitHub SSH? Drop the `id_git` line from
 `mounts` in `.devcontainer/devcontainer.json` and the SSH block from
 `.devcontainer/post-create.sh`.
 
+## GitHub CLI (`gh`) auth
+
+The `gh` CLI reuses your host login. The container bind-mounts `~/.config/gh`
+(which holds `hosts.yml` with the auth token) read-write, so `gh` commands work
+immediately with no `gh auth login` step inside the container, and any token
+refresh flows back to the host.
+
+**Requires that you're already logged in on the host (`gh auth login`), so
+`~/.config/gh` exists.** If it does not, the container fails to start on the
+missing bind-mount source. Don't need `gh`? Drop the `~/.config/gh` line from
+`mounts` in `.devcontainer/devcontainer.json`.
+
+This is `gh` CLI auth only; `git` over SSH still authenticates with `id_git`
+(see above).
+
 
 ---
 
