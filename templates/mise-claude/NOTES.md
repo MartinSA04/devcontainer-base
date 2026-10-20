@@ -28,3 +28,20 @@ missing bind-mount source. Don't need `gh`? Drop the `~/.config/gh` line from
 
 This is `gh` CLI auth only; `git` over SSH still authenticates with `id_git`
 (see above).
+
+## DNS after switching networks
+
+The container joins a user-defined Docker network, `devcontainers`, instead of
+Docker's default bridge; `initializeCommand` creates it on the host if it is
+missing. On the default bridge, Docker copies the host's upstream DNS servers
+into the container once, at start — so on a Linux host running
+systemd-resolved, switching Wi-Fi or VPN leaves the container with stale
+resolvers, and every name lookup fails until the container restarts. On a
+user-defined network the container uses Docker's embedded DNS (`127.0.0.11`),
+which forwards each lookup to the host's own resolver and so follows every
+network change.
+
+**Requires the `docker` CLI on the host**, since `initializeCommand` runs
+there. Containers on the shared `devcontainers` network can reach each other by
+name. Don't want this? Drop `initializeCommand` and `runArgs` from
+`.devcontainer/devcontainer.json`.
